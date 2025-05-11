@@ -1,0 +1,67 @@
+from django.contrib.auth.models import User
+from news.models import Author, Category, Post, PostCategory, Comment
+from django.utils import timezone
+
+user1 = User.objects.create_user(username='user1', password='password1')
+user2 = User.objects.create_user(username='user2', password='password2')
+print("Созданы пользователи user1 и user2")
+
+author1 = Author.objects.create(user=user1)
+author2 = Author.objects.create(user=user2)
+print("Созданы авторы author1 и author2")
+
+category_sport = Category.objects.create(name='Спорт')
+category_politics = Category.objects.create(name='Политика')
+category_science = Category.objects.create(name='Наука')
+category_culture = Category.objects.create(name='Культура')
+print("Созданы категории: Спорт, Политика, Наука, Культура")
+
+post1 = Post.objects.create(author=author1, post_type=Post.ARTICLE, title='Интересная статья о спорте', text='Подробный текст интересной статьи о спорте...')
+post2 = Post.objects.create(author=author2, post_type=Post.ARTICLE, title='Важные политические события', text='Обзор последних важных политических событий...')
+news1 = Post.objects.create(author=author1, post_type=Post.NEWS, title='Срочная новость о научном открытии', text='Краткое сообщение о сенсационном научном открытии.')
+PostCategory.objects.create(post=post1, category=category_sport)
+PostCategory.objects.create(post=post1, category=category_politics)
+PostCategory.objects.create(post=post2, category=category_politics)
+PostCategory.objects.create(post=news1, category=category_science)
+print("Созданы статьи и новость, назначены категории.")
+
+comment1_post1 = Comment.objects.create(post=post1, user=user1, text='Отличная статья!')
+comment2_post1 = Comment.objects.create(post=post1, user=user2, text='Согласен с автором.')
+comment1_post2 = Comment.objects.create(post=post2, user=user1, text='Интересный взгляд.')
+comment1_news1 = Comment.objects.create(post=news1, user=user2, text='Вот это новость!')
+print("Созданы комментарии к постам.")
+
+post1.like()
+post1.like()
+post2.dislike()
+comment1_post1.like()
+comment1_news1.dislike()
+print("Применены лайки и дизлайки к постам и комментариям.")
+
+author1.update_rating()
+author2.update_rating()
+print("Рейтинги авторов обновлены.")
+
+best_author = Author.objects.order_by('-rating').first()
+if best_author:
+    print(f"\nЛучший автор: {best_author.user.username}, рейтинг: {best_author.rating}")
+else:
+    print("\nНет авторов.")
+
+best_rated_post = Post.objects.order_by('-rating').filter(post_type=Post.ARTICLE).first()
+if best_rated_post:
+    print(f"\nЛучшая статья:")
+    print(f" Дата добавления: {best_rated_post.date_created}")
+    print(f" Автор: {best_rated_post.author.user.username}, рейтинг автора: {best_rated_post.author.rating}")
+    print(f" Заголовок: {best_rated_post.title}")
+    print(f" Превью: {best_rated_post.preview()}")
+else:
+    print("\nНет статей.")
+
+if best_rated_post:
+    comments = Comment.objects.filter(post=best_rated_post)
+    print(f"\nКомментарии к статье '{best_rated_post.title}':")
+    for comment in comments:
+        print(f" Дата: {comment.date_created}, Пользователь: {comment.user.username}, Рейтинг: {comment.rating}, Текст: {comment.text}")
+else:
+    print("\nЛучшая статья не найдена, поэтому комментарии отсутствуют.")
